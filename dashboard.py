@@ -78,8 +78,7 @@ plt.plot(evol)
 
 plt.legend(queries)
 
-plt.xlabel('Time --->')
-plt.ylabel('Number of Tweets --->')
+plt.ylabel('Number of Tweets ')
 plt.title('Hourly Evolution of the number of Tweets (24h)')
 plt.gca().get_xaxis().set_visible(False)
 

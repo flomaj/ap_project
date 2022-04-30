@@ -56,7 +56,7 @@ for i in range(len(change)):
     if  change[i] == 0:
         color.append("grey")
         
-        #Draw the heatmap
+    #Draw the heatmap
 plt.figure(figsize=(8,6))
 squarify.plot(sizes=val, label=queries, pad=True, color=color)
 plt.axis("off")

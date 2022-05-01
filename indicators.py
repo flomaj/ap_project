@@ -1,4 +1,4 @@
-#import packages
+ #import packages
 
 import tweepy
 import numpy as np
@@ -61,25 +61,25 @@ gt_change = gt_change[0]
 #define the "trend"
 
 if tw_change < -0.4:
-    tw_status = "Strong Sell"
+    tw_status = "Very Low"
 elif -0.4 <= tw_change < -0.1:
-    tw_status = "Sell"
+    tw_status = "Low"
 elif -0.1 <= tw_change < 0.1:
     tw_status = "Neutral"
 elif 0.1 <= tw_change < 0.4:
-    tw_status = "Buy"
+    tw_status = "Strong"
 elif tw_change >= 0.4:
-    tw_status = "Strong Buy"
+    tw_status = "Very Strong"
 if gt_change < -0.4:
-    gt_status = "Strong Sell"
+    gt_status = "Very Low"
 elif -0.4 <= gt_change < -0.1:
-    gt_status = "Sell"
+    gt_status = "Low
 elif -0.1 <= gt_change < 0.1:
     gt_status = "Neutral"
 elif 0.1 <= gt_change < 0.4:
-    gt_status = "Buy"
+    gt_status = "Strong
 elif gt_change >= 0.4:
-    gt_status = "Strong Buy"
+    gt_status = "Very Strong"
     
 # transform the data
 

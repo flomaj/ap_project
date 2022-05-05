@@ -27,10 +27,10 @@ with open('negative.txt') as f:
     word_list1
     word_list2 = []
     text2=[]
-    for i in range(len(df_ws):
-        txt2 = re.sub('[,\.()":;!@#$%^&*\d]|\'s|\'', '', dp[i])
-        word_list1 = txt2.replace('\n',' ').replace('  ',' ').lower().split(' ')
-        word_list2=word_list2 + word_list1
+    new_list = str(dp.values.tolist())
+    
+    txt2 = re.sub('[,\.()":;!@#$%^&*\d]|\'s|\'', '', new_list)
+    word_list1 = txt2.replace('\n',' ').replace('  ',' ').lower().split(' ')
         
     
     # create empty dictionaries
@@ -38,7 +38,7 @@ with open('negative.txt') as f:
     word_count_positive = {}
     word_count_negative= {}
     
-    for word in word_list2:
+    for word in word_list1:
 		# count all words frequency
         if word in word_count_dict.keys():
             word_count_dict[word] += 1

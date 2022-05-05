@@ -63,15 +63,7 @@ with open('negative.txt') as f:
     list_positive = sorted(word_count_positive.items(), key=lambda x:x[1], reverse=True)
     list_negative = sorted(word_count_negative.items(), key=lambda x:x[1], reverse=True)
 
-    with open('word_count.csv', 'w')as f1:
-        for i in list_dict:
-            f1.write('%s,%s\n' %(i[0],str(i[1])))
-    with open('word_positive.csv', 'w')as f1:
-        for i in list_positive:
-            f1.write('%s,%s\n' %(i[0],str(i[1])))
-    with open('word_negative.csv', 'w')as f1:
-        for i in list_negative:
-            f1.write('%s,%s\n' %(i[0],str(i[1])))
+  
             
     print("the number of negative words found in the tweets are : " +str(len(list_negative)))
     print("the number of positive words found in the tweets are : " +str(len(list_positive)))

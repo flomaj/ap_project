@@ -12,17 +12,13 @@ import json
 # save the positive words into a list called p_list
 with open('positive.txt') as f:
     p_txt = f.read()
-    
     p_list = p_txt.replace('\n',' ').replace('  ',' ').lower().split(' ')
-    # test if cool is in the list
-    print('cool is in the postive list: ', 'cool' in p_list)
-    
+   
 
 
 # save the negative words into a list called n_list
 with open('negative.txt') as f:
     n_txt = f.read()
-    
     n_list = n_txt.replace('\n',' ').replace('  ',' ').lower().split(' ')
    
 

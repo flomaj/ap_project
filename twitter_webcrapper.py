@@ -21,7 +21,7 @@ for tweet in sntwitter.TwitterSearchScraper(query).get_items():
     if len(tweets) == limit:
         break
     else:
-        tweets.append([tweet.date, tweet.user.username, tweet.content])
+        tweets.append([tweet.date])
         
 dp = pd.DataFrame(tweets, columns=['Tweet'])
 print(df)

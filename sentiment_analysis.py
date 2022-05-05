@@ -27,7 +27,7 @@ with open('negative.txt') as f:
     word_list1
     word_list2 = []
     text2=[]
-    for i in range(5000):
+    for i in range(len(df_ws):
         txt2 = re.sub('[,\.()":;!@#$%^&*\d]|\'s|\'', '', dp[i])
         word_list1 = txt2.replace('\n',' ').replace('  ',' ').lower().split(' ')
         word_list2=word_list2 + word_list1

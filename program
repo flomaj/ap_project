@@ -13,13 +13,13 @@ import json
 
 #Define the tokens given by Twitter to set up the client.
 
-consumer_key = "Ok7mPlJGKiX7U81wZKET6JFye"
-consumer_secret_key = "JmNRNIftourk2VOsL6CrT5oY3sPdcL4xS6fgmw9sVrSxt366xT"
+consumer_key = ""
+consumer_secret_key = ""
 
-access = "2853377715-oL5I2fCvpsTL7o8EqdTPlT802Jh3hyGDT2PruNc"
-access_secret = "xBCzuE01VG1AvlaSZwQSNWc9cWq0h41cHdmy6nYKGE4sC"
+access = ""
+access_secret = ""
 
-bearer_token = "AAAAAAAAAAAAAAAAAAAAANVHaAEAAAAAOwDI8p05HLsWbUbgJpuT%2BHtHMxs%3DdvdPwSmNgYYdlflQJg6bYPxHOBat2Tq9GqiscjdNUMfnpdpz2p"
+bearer_token = ""
 
 #Configure the Twitter client 
 

@@ -1,0 +1,311 @@
+#Import required packages
+
+import tweepy
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import squarify
+from pytrends.request import TrendReq
+import snscrape.modules.twitter as sntwitter
+import re
+import json
+
+
+#Define the tokens given by Twitter to set up the client.
+
+consumer_key = "Ok7mPlJGKiX7U81wZKET6JFye"
+consumer_secret_key = "JmNRNIftourk2VOsL6CrT5oY3sPdcL4xS6fgmw9sVrSxt366xT"
+
+access = "2853377715-oL5I2fCvpsTL7o8EqdTPlT802Jh3hyGDT2PruNc"
+access_secret = "xBCzuE01VG1AvlaSZwQSNWc9cWq0h41cHdmy6nYKGE4sC"
+
+bearer_token = "AAAAAAAAAAAAAAAAAAAAANVHaAEAAAAAOwDI8p05HLsWbUbgJpuT%2BHtHMxs%3DdvdPwSmNgYYdlflQJg6bYPxHOBat2Tq9GqiscjdNUMfnpdpz2p"
+
+#Configure the Twitter client 
+
+client = tweepy.Client(bearer_token=bearer_token, 
+                           consumer_key=consumer_key, 
+                           consumer_secret=consumer_secret_key, 
+                           access_token=access, 
+                           access_token_secret=access_secret)
+
+        #Part 1: The nine highest capitalized cryptocurrencies.
+
+    #Set up the data for the heatmap
+
+#Finding the datas for the main heatmap
+
+queries = ["Bitcoin", "Ethereum","BNB", "AVAX", "LUNA", "Solana", "XRP", "Cardano", "DOT"] #each string corresponds to one of the nine highest capitalized cryptocurrencies
+data_hm = pd.DataFrame() #we create an empty dataframe where we will store the data related to the number of tweets for each cryptocurrency. 
+for q in queries: #we instatiate a for loop to compute the data for each query.
+    tweets = client.get_recent_tweets_count(query=q, granularity="hour") #we use the client to get the number of tweet per hour of the query
+    nb_tweets_day = pd.DataFrame(tweets.data) #we transform the data given by the client to a dataframe
+    data_hm[q] = nb_tweets_day["tweet_count"].astype(int) #we store the data in the dataframe created previously
+
+last_2_complete = data_hm.iloc[-3:-1] #we keep the last two complete hours to compute the change
+df = last_2_complete.T #we transpose our dataset to have two column, one for each hour
+df.columns = ["previous" , "actual"] #we rename our two columns
+val_hm = df["actual"].tolist() #we convert the data of the actual complete hour to a list, which is the format required by squarify.
+
+    #Set up the data for the bar plot
+    
+#Compute the hourly changes (%)
+
+actual = df["actual"]
+previous = df["previous"]
+change_bar = (actual - previous) / previous #the change is computed by using the formula : (T1 - T0) / T0
+
+    #Code the color of each part of the heatmap and of the bars
+    
+color = [] #we ccreate an empty dataset
+for i in range(len(change_bar)): #we instantiate a for loop for each dominant cryptocurrency
+    if  change_bar[i] > 0:
+        color.append("green") #if the change is positive, set the color to green
+        #print(i, change[i], color)
+    if  change_bar[i] < 0:
+        color.append("red") #if the change is negative, set the color to red
+        #print(i, change[i], color)
+    if  change_bar[i] == 0:
+        color.append("grey") #if there is no change, set the color to grey
+
+        
+        #Part 2: The requested cryptocurrency.
+        
+    #ask the user for the desired asset
+    
+query_user = str(input("Enter the coin you are interested in..."))
+
+    #compute the hourly change of the number of Tweets of the user request
+
+tweets_query = client.get_recent_tweets_count(query=query_user, granularity="hour") #we use the client to get the number of tweet per hour of the query
+nb_tweets_day = pd.DataFrame(tweets_query.data) #we transform the data given by the client to a dataframe
+data_twitter = nb_tweets_day["tweet_count"].astype(int) #we store the data in the dataframe created previously
+
+last_2_complete = data_twitter.iloc[-3:-1] #we keep the last two complete hours to compute the change
+tw_change = (last_2_complete.iloc[1] - last_2_complete.iloc[0]) / last_2_complete.iloc[0] #the change is computed by using the formula : (T1 - T0) / T0
+
+    #compute the hourly change of the Google Trends Score of the user request
+
+#find the data on Google Trends
+
+word = [str(query_user)] #we modify the user request to make it suitable to pytrends
+pytrends = TrendReq(hl='en-US', tz=120) #we get the hourly data over the last 7 days for the request
+pytrends.build_payload(word, cat=0, timeframe='now 7-d')
+data_gt = pytrends.interest_over_time()
+
+#find the hourly change
+
+last_2_complete = data_gt.iloc[-3:-1,:-1] #we keep the last two complete hours to compute the change
+gt_change = (last_2_complete.iloc[1] - last_2_complete.iloc[0]) / last_2_complete.iloc[0] #*100 #the change is computed by using the formula : (T1 - T0) / T0
+gt_change = gt_change[0]
+
+    #we define the status of the indicators related to Twitter and Google Trends
+
+def status(x): #fuction of the rules for the status
+    if x < -0.25:
+        return "Highly Down" #if the modified change is over -25%, the status is "Highly Down"
+    
+    elif -0.25 <= x < -0.1:
+        return "Down" #if the modified change is between -10% & -25%, the status is "Down"
+    
+    elif -0.1 <= x < 0.1:
+        return "Neutral" #if the modified change is between -10% & 10%, the status is "Neutral"
+    
+    elif 0.1 <= x < 0.25:
+        return "Up" #if the modified change is between 10% & 25%, the status is "Up"
+    
+    elif x >= 0.25:
+        return "Highly Up" #if the modified change is over 25%, the status is "Highly Up"
+
+def norm(x): #function to modify the change
+    if x < -1:
+        x = -1 #change is limited to -100%
+    if x > 1:
+        x = 1 #change is limited to 100%
+
+    return (x/2) + 0.5 #modification
+
+tw_change_n = norm(tw_change) #modification of the data from Twitter
+tw_status = status(tw_change_n) #definition of the status for Twitter change
+gt_change_n = norm(gt_change) #modification of the data from Google Trends
+gt_status = status(gt_change_n) #definition of the status for Google Trends change
+
+        #Part 3: Sentiment analysis for the desired cryptocurrency
+    
+    #Webscappring
+
+tweets_ws = [] #create an empty dataframe where we will store the content of tweets
+limit_ws = 200 #Number of tweets the trader want to analyze
+
+
+for tweet in sntwitter.TwitterSearchScraper(query_user).get_items():
+    #for loop to find the content of each tweet until the amount desired is reached
+    if len(tweets_ws) == limit_ws:
+        break
+    else:
+        tweets_ws.append([tweet.content])
+        
+df_ws = pd.DataFrame(tweets_ws, columns=['Tweet']) #convert the data to a dataframe and keep only the tweets content
+
+#save the positive words into a list called p_list
+with open('positive.txt') as f:
+    p_txt = f.read()
+    p_list = p_txt.replace('\n',' ').replace('  ',' ').lower().split(' ')
+
+#save the negative words into a list called n_list
+with open('negative.txt') as f:
+    n_txt = f.read()
+    n_list = n_txt.replace('\n',' ').replace('  ',' ').lower().split(' ')
+
+# process the tweets   
+word_list1 = []
+text2=[]
+new_list = str(df_ws.values.tolist()) #we formate our webscrapped tweets for the sentiment analysis
+
+txt2 = re.sub('[,\.()":;!@#$%^&*\d]|\'s|\'', '', new_list) #we get rid of the special characters by replacing them with ' '
+word_list1 = txt2.replace('\n',' ').replace('  ',' ').lower().split(' ') #we create a dataframe containing all the words from all the tweets
+    
+        
+    
+# create empty dictionaries
+word_count_dict = {}
+word_count_positive = {}
+word_count_negative= {}
+
+for word in word_list1:
+	# count all words frequency
+    if word in word_count_dict.keys():
+        word_count_dict[word] += 1
+    else:
+        word_count_dict[word] = 1
+		# count if it is a positive word
+    if word in p_list:
+        if word in word_count_positive.keys():
+            word_count_positive[word] += 1
+        else:
+            word_count_positive[word] = 1
+		# else see if it is a negative word
+    elif word in n_list:
+        if word in word_count_negative.keys():
+            word_count_negative[word] += 1
+        else:
+            word_count_negative[word] = 1
+    else: # do nothing
+        pass
+
+negative_words = len(list_negative) #variable of the number of negative words
+positive_words = len(list_positive) #variable of the number of positive words
+
+    #Define the status of the sentiment analysis 
+
+ws_ratio = positive_words / negative_words
+
+if 0.95 <= ws_ratio < 1.05:
+    ws_status = "Neutral"
+
+elif 1.05 <= ws_ratio < 1.25:
+    ws_status = "Positive"
+
+elif 1.25 <= ws_ratio:
+    ws_status = "Highly Positive"
+
+elif 0.75 < ws_ratio <= 0.95:
+    ws_status = "Negative"
+
+elif 0.75 >= ws_ratio:
+    ws_status = "Highly Negative"
+    
+        #Part 4: Creation of the dashboard
+
+    #Design of the indicators
+    
+def indicator(ax, val, title, status):
+    plt.pie(val, colors=colors_pie) #pie chart
+    ax.add_artist(plt.Circle((0, 0), 0.6, color='white')) #add a white circle in the middle
+    plt.text(0, 1.2, title, fontsize=15, weight = 600, ha = "center", wrap=True) #add the title
+    plt.text(-0.85, -0.2, "+", fontsize=16, weight = 700, wrap=True)
+    plt.text(0.78, -0.2, "-", fontsize=16, weight = 700, wrap=True)
+    plt.axhline(y=0, color="black", linewidth = 5) #add the horizontal line 
+    plt.text(0, -0.6, status, fontsize=19, weight = 700, ha = "center", wrap=True) #give the accurate status
+    
+
+    #Dashboard creation
+
+fig = plt.figure(constrained_layout=True, figsize= (20,10))
+
+gs = GridSpec(6, 4, figure=fig) #we create the grid where we will dispose the other graphs.
+
+    #Heatmap on the left
+
+ax1 = fig.add_subplot(gs[:, 0:2]) #give the localisation on the grid
+
+label_hm = ["BTC", "ETH","BNB", "AVAX", "LUNA", "SOL", "XRP", "ADA", "DOT"] #tickers of each of the nine highest crypto. 
+
+squarify.plot(sizes=val_hm, label=label_hm, pad=True, color=color) #use the squarify page to create the heatmap
+plt.axis("off")
+plt.title('Hourly Tweets Number', fontsize=15, weight = 600, ha = "center")
+
+    #Hourly changes on the middle top
+
+ax2 = fig.add_subplot(gs[0:3, 2]) #give the localisation on the grid
+
+ax2.bar(label_hm, change_bar, color = color, edgecolor = "black") #create of the bar plot 
+ax2.axhline(y=0, color="black", linewidth = 5) #horizontal line to show the 0% level
+ax2.set_title('Number of Tweets Change (%)', fontsize=15, weight = 600, ha = "center")
+
+    #Hourly evolution on the middle bottom
+
+ax3 = fig.add_subplot(gs[3:6, 2]) #give the localisation on the grid
+
+evol = data_twitter[-25:-1] #take the data of the last 24h
+ax3.plot(evol, color = "black")
+ax3.set_ylabel('Number of Tweets')
+ax3.set_title(query_user + ' '+ 'Tweets Evolution (24h)', fontsize=15, weight = 600, ha = "center")
+ax3.xaxis.set_visible(False)
+
+
+
+ax4 = fig.add_subplot(gs[0:2, 3]) #give the localisation on the grid
+
+    # Google Trends Indicator
+
+# set values
+val_gt = [(1-gt_change_n), gt_change_n]
+
+# color & half pie chart
+val_gt.append(sum(val_gt))  # 50% blank 
+colors_pie = ['red', 'green', 'white']
+
+# plot
+
+indicator(ax4, val_gt, query_user + " Google Engagement", gt_status) #call the indicator function
+
+ax5 = fig.add_subplot(gs[2:4, 3]) #give the localisation on the grid
+
+    # Twitter Indicator
+
+#set values
+val_tw = [(1-tw_change_n), tw_change_n]
+
+# color & half pie chart
+val_tw.append(sum(val_tw))  # 50% blank
+
+# plot
+indicator(ax5, val_tw, query_user + " Twitter Engagement", tw_status) #call the indicator function
+
+ax6 = fig.add_subplot(gs[4:6, 3]) #give the localisation on the grid
+
+    # WS Indicator
+
+#set values
+val_ws = [negative_words, positive_words]
+
+# color & half pie chart
+val_ws.append(sum(val_ws))  # 50% blank
+
+# plot
+indicator(ax6, val_ws, query_user + " Sentiment Analysis", ws_status) #call the indicator function
+
+fig.suptitle("Social Media DashBoard", fontsize=23, weight = 600)
+
+plt.show()

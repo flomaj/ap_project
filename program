@@ -135,7 +135,7 @@ gt_status = status(gt_change_n) #definition of the status for Google Trends chan
     #Webscappring
 
 tweets_ws = [] #create an empty dataframe where we will store the content of tweets
-limit_ws = 200 #Number of tweets the trader want to analyze
+limit_ws = 500 #Number of tweets the trader want to analyze
 
 
 for tweet in sntwitter.TwitterSearchScraper(query_user).get_items():

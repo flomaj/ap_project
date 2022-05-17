@@ -166,35 +166,19 @@ txt2 = re.sub('[,\.()":;!@#$%^&*\d]|\'s|\'', '', new_list) #we get rid of the sp
 word_list1 = txt2.replace('\n',' ').replace('  ',' ').lower().split(' ') #we create a dataframe containing all the words from all the tweets
     
         
-    
-# create empty dictionaries
-word_count_dict = {}
-word_count_positive = {}
-word_count_negative= {}
-
+negative_words=0 #create new variables for the foor loop
+positive_words=0
 for word in word_list1:
-	# count all words frequency
-    if word in word_count_dict.keys():
-        word_count_dict[word] += 1
-    else:
-        word_count_dict[word] = 1
-		# count if it is a positive word
-    if word in p_list:
-        if word in word_count_positive.keys():
-            word_count_positive[word] += 1
-        else:
-            word_count_positive[word] = 1
+    if word in p_list:   #if the word in the list of the tweets content is in the positive list positive_word variable increase by 1    
+            positive_words=positive_words+1
 		# else see if it is a negative word
     elif word in n_list:
-        if word in word_count_negative.keys():
-            word_count_negative[word] += 1
-        else:
-            word_count_negative[word] = 1
+            negative_words=negative_words+1
     else: # do nothing
         pass
+    
+    
 
-negative_words = len(list_negative) #variable of the number of negative words
-positive_words = len(list_positive) #variable of the number of positive words
 
     #Define the status of the sentiment analysis 
 
